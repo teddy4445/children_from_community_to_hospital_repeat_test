@@ -40,7 +40,7 @@
         <ul>
           <li><a href="index.html">Home</a></li>
           <li><a href="disclaimer.html">Disclaimer</a></li>
-          <li><a href="cbc_predictor.html">CBC Predictor</a></li>
+          <li><a href="cbc_predictor.html">EZE Predictor</a></li>
           <li><a href="che_predictor.html">CHE Predictor</a></li>
           <li class="active"><a href="crp_predictor.html">CRP Predictor</a></li>
         </ul>
@@ -95,454 +95,156 @@
 	<script crossorigin="anonymous" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js">
 	</script>
 	<script>
-	 let name_aki = "AKI";
-		let name_postComplication = "postComplication1Y2N";
-		let parms_aki = ["Size_cm", "renalScore4_12", "age", "BaseHb", "WIT*", "EBL*", "weight", "height", "creatinine"];
-		let parms_postComplication = ["height", "collSysOpenY1N2", "Upper1Mid2Hillar3Lower4", "Central1Peripheral2", "renalScore4_12", "clinTNEW", "Ptnew", "pathologicN", "Pmnew", "worstGrade1_4", "creatinine"];
-		
-		generate_forms();
-		
-		function generate_forms()
-		{
-			generate_form(name_aki, "aki_form", parms_aki);
-			//generate_form(name_postComplication, "postComplication_form", parms_postComplication);
-		}
-		
-		function list_to_str(items)
-		{
-			answer = "[";
-			for (var i = 0; i < items.length; i++)
-			{
-				answer += "'" + items[i] + "',"
-			}
-			answer = answer.substring(0, answer.length - 1);
-			answer += "]"
-			return answer;
-		}
-		
-		function generate_form(name, form_id, coloums)
-		{
-			var panel = document.getElementById("panel");
-			panel.innerHTML += '<h3>' + name + ' prediction</h3><div class="card"><div class="card-body"><div id="' + form_id + '" class="row"></div></div></div><br><br>';
-			panel_form = document.getElementById(form_id);
-			var form_html = "";
-			for (var i = 0; i < coloums.length; i++)
-			{
-				form_html += '<div class="col-lg-4 col-md-4 col-sm-12"><div class="form-group">';
-				form_html += '<label id="label_' + name + '_' + coloums[i] + '" for="' + coloums[i] + '">' + coloums[i] + ' </label>';
-				form_html += '<input type="text" class="form-control" id="' + name + '_' + coloums[i] + '" aria-describedby="' + coloums[i] + '" placeholder="' + coloums[i] + '">';
-				form_html += '</div></div>';
-			}
-			form_html += '<br><div class="col-lg-12 col-md-12 col-sm-12"><button type="submit" class="btn btn-success btn-block" id="predict_btn_' + name + '" onclick="return run_prediction(\'' + name + '\', ' + list_to_str(coloums) + ', predict_' + name + ');"> Predict </button></div>';
-			form_html += '<br><br><div class="col-lg-10 col-md-10 col-sm-12"><p id="answer_' + name + '"> </p></div>';
-			panel_form.innerHTML += form_html;
-		}
-		
-		function run_prediction(name, parameters, sat)
-		{
-			var values = [];
-			var is_broken = false;
-			for (var i = 0; i < parameters.length; i++)
-			{
-				var new_val = document.getElementById(name + "_" + parameters[i]).value;
-				if (new_val == "")
-				{
-					document.getElementById("label_" + name + "_" + parameters[i]).style.color = "red";
-					if (!is_broken)
-					{
-						document.getElementById(name + "_" + parameters[i]).focus();
-					}
-					is_broken = true;
-				}
-				else
-				{
-					var float_new_val = parseFloat(new_val);
-					if (!isNaN(float_new_val))
-					{
-						values.push(float_new_val);
-						document.getElementById("label_" + name + "_" + parameters[i]).style.color = "black";
-					}
-					else
-					{
-						document.getElementById("label_" + name + "_" + parameters[i]).style.color = "red";
-						var input_place = document.getElementById(name + "_" + parameters[i]);
-						input_place.value = "";
-						input_place.focus();
-					}
-				}
-			}
-			if (!is_broken)
-			{
-				var predict_with_conf = sat(values);
-				document.getElementById("answer_" + name).innerHTML = "<h3>The prediction is: <b>" + predict_with_conf[0] + " with (" + predict_with_conf[1][0] + "% confidence)</b>.<br><br>Because: <br>" +  predict_with_conf[1][1].replaceAll("and", "and<br>") + "</h3>";
-			}
-			else
-			{
-				document.getElementById("answer_" + name).innerHTML = "";
-			}
-			// just to make sure the form won't break
-			return false;
-		}
-		
-		
-	function predict_AKI(values)
-	{
-		path = []
-		if (values[8] <= 1.7100000381469727)
-		{
-			path.push('creatinine <= 1.71')
-			if (values[3] <= 14.349999904632568)
-			{
-				path.push('BaseHb <= 14.35')
-				if (values[5] <= 62.5)
-				{
-					path.push('EBL* <= 62.5')
-					if (values[4] <= 144.0)
-					{
-						path.push('WIT* <= 144.0')
-						if (values[1] <= 9.5)
-						{
-							path.push('renal <= 9.5')
-							if (values[3] <= 14.050000190734863)
-							{
-								path.push('BaseHb <= 14.05')
-								if (values[6] <= 100.5)
-								{
-									path.push('weight <= 100.5')
-									return [0, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('weight > 100.5')
-									return [0, check_path_AKI(path)];
-								}
-							}
-							else
-							{
-								path.push('BaseHb > 14.05')
-								return [0, check_path_AKI(path)];
-							}
-						}
-						else
-						{
-							path.push('renal > 9.5')
-							if (values[2] <= 85.0)
-							{
-								path.push('age <= 85.0')
-								return [0, check_path_AKI(path)];
-							}
-							else
-							{
-								path.push('age > 85.0')
-								return [1, check_path_AKI(path)];
-							}
-						}
-					}
-					else
-					{
-						path.push('WIT* > 144.0')
-						if (values[2] <= 58.5)
-						{
-							path.push('age <= 58.5')
-							if (values[2] <= 37.5)
-							{
-								path.push('age <= 37.5')
-								return [1, check_path_AKI(path)];
-							}
-							else
-							{
-								path.push('age > 37.5')
-								if (values[8] <= 1.4000000357627869)
-								{
-									path.push('creatinine <= 1.4')
-									return [0, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('creatinine > 1.4')
-									return [1, check_path_AKI(path)];
-								}
-							}
-						}
-						else
-						{
-							path.push('age > 58.5')
-							if (values[4] <= 175.5)
-							{
-								path.push('WIT* <= 175.5')
-								return [1, check_path_AKI(path)];
-							}
-							else
-							{
-								path.push('WIT* > 175.5')
-								if (values[2] <= 68.5)
-								{
-									path.push('age <= 68.5')
-									return [0, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('age > 68.5')
-									return [1, check_path_AKI(path)];
-								}
-							}
-						}
-					}
-				}
-				else
-				{
-					path.push('EBL* > 62.5')
-					if (values[5] <= 77.5)
-					{
-						path.push('EBL* <= 77.5')
-						return [1, check_path_AKI(path)];
-					}
-					else
-					{
-						path.push('EBL > 77.5')
-						if (values[6] <= 83.0)
-						{
-							path.push('weight <= 83.0')
-							if (values[0] <= 2.950000047683716)
-							{
-								path.push('Size <= 2.95')
-								return [0, check_path_AKI(path)];
-							}
-							else
-							{
-								path.push('Size > 2.95')
-								if (values[7] <= 152.5)
-								{
-									path.push('height <= 152.5')
-									return [0, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('height > 152.5')
-									return [1, check_path_AKI(path)];
-								}
-							}
-						}
-						else
-						{
-							path.push('weight > 83.0')
-							if (values[2] <= 46.0)
-							{
-								path.push('age <= 46.0')
-								return [0, check_path_AKI(path)];
-							}
-							else
-							{
-								path.push('age > 46.0')
-								if (values[8] <= 0.8149999976158142)
-								{
-									path.push('creatinine <= 0.815')
-									return [1, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('creatinine > 0.815')
-									return [1, check_path_AKI(path)];
-								}
-							}
-						}
-					}
-				}
-			}
-			else
-			{
-				path.push('BaseHb > 14.35')
-				if (values[6] <= 60.5)
-				{
-					path.push('weight <= 60.5')
-					if (values[8] <= 1.0450000166893005)
-					{
-						path.push('creatinine <= 1.045')
-						if (values[8] <= 0.9900000095367432)
-						{
-							path.push('creatinine <= 0.99')
-							if (values[4] <= 127.5)
-							{
-								path.push('WIT* <= 127.5')
-								if (values[1] <= 8.5)
-								{
-									path.push('renal <= 8.5')
-									return [0, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('renal > 8.5')
-									return [1, check_path_AKI(path)];
-								}
-							}
-							else
-							{
-								path.push('WIT* > 127.5')
-								return [1, check_path_AKI(path)];
-							}
-						}
-						else
-						{
-							path.push('creatinine > 0.99')
-							return [0, check_path_AKI(path)];
-						}
-					}
-					else
-					{
-						path.push('creatinine > 1.045')
-						return [1, check_path_AKI(path)];
-					}
-				}
-				else
-				{
-					path.push('weight > 60.5')
-					if (values[6] <= 90.5)
-					{
-						path.push('weight <= 90.5')
-						if (values[4] <= 89.0)
-						{
-							path.push('WIT* <= 89.0')
-							return [0, check_path_AKI(path)];
-						}
-						else
-						{
-							path.push('WIT* > 89.0')
-							if (values[4] <= 100.5)
-							{
-								path.push('WIT* <= 100.5')
-								if (values[5] <= 85.0)
-								{
-									path.push('EBL <= 85.0')
-									return [1, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('EBL > 85.0')
-									return [0, check_path_AKI(path)];
-								}
-							}
-							else
-							{
-								path.push('WIT* > 100.5')
-								if (values[1] <= 10.5)
-								{
-									path.push('renal <= 10.5')
-									return [0, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('renal > 10.5')
-									return [1, check_path_AKI(path)];
-								}
-							}
-						}
-					}
-					else
-					{
-						path.push('weight > 90.5')
-						if (values[7] <= 169.0)
-						{
-							path.push('height <= 169.0')
-							if (values[5] <= 80.0)
-							{
-								path.push('EBL* <= 80.0')
-								return [0, check_path_AKI(path)];
-							}
-							else
-							{
-								path.push('EBL* > 80.0')
-								if (values[2] <= 59.5)
-								{
-									path.push('age <= 59.5')
-									return [1, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('age > 59.5')
-									return [0, check_path_AKI(path)];
-								}
-							}
-						}
-						else
-						{
-							path.push('height > 169.0')
-							if (values[0] <= 7.049999952316284)
-							{
-								path.push('Size <= 7.05')
-								return [1, check_path_AKI(path)];
-							}
-							else
-							{
-								path.push('Size > 7.05')
-								if (values[8] <= 1.0950000286102295)
-								{
-									path.push('creatinine <= 1.095')
-									return [0, check_path_AKI(path)];
-								}
-								else
-								{
-									path.push('creatinine > 1.095')
-									return [1, check_path_AKI(path)];
-								}
-							}
-						}
-					}
-				}
-			}
-		}
-		else
-		{
-			path.push('creatinine > 1.71')
-			return [1, check_path_AKI(path)];
-		}
-	}
+	 let name_aki = "CRP";
+		let parms_aki = ["CRP", "Age", "Fever", "Pediatrician", "Weakness", "Male", "Other complaint", "Pain"];
+	 
+generate_forms();
 
-	function check_path_AKI(path_conditions)
-	{
-		var scores = {};
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* <= 144.0 and renal <= 9.5 and BaseHb <= 14.05 and weight <= 100.5'] = 55.2;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* <= 144.0 and renal <= 9.5 and BaseHb <= 14.05 and weight > 100.5'] = 41.97;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* <= 144.0 and renal <= 9.5 and BaseHb > 14.05'] = 42.72;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* <= 144.0 and renal > 9.5 and age <= 85.0'] = 46.31;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* > 144.0 and age <= 58.5 and age > 37.5 and creatinine <= 1.4'] = 42.91;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* > 144.0 and age > 58.5 and WIT* > 175.5 and age <= 68.5'] = 41.02;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* > 62.5 and EBL* > 77.5 and weight <= 83.0 and Size <= 2.95'] = 42.53;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* > 62.5 and EBL* > 77.5 and weight <= 83.0 and Size > 2.95 and height <= 152.5'] = 42.53;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* > 62.5 and EBL* > 77.5 and weight > 83.0 and age <= 46.0'] = 41.02;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight <= 60.5 and creatinine <= 1.045 and creatinine <= 0.99 and WIT* <= 127.5 and renal <= 8.5'] = 41.21;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight <= 60.5 and creatinine <= 1.045 and creatinine > 0.99'] = 41.21;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight <= 90.5 and WIT* <= 89.0'] = 41.59;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight <= 90.5 and WIT* > 89.0 and WIT* <= 100.5 and EBL* > 85.0'] = 40.83;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight <= 90.5 and WIT* > 89.0 and WIT* > 100.5 and renal <= 10.5'] = 43.86;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight > 90.5 and height <= 169.0 and EBL* <= 80.0'] = 41.4;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight > 90.5 and height <= 169.0 and EBL* > 80.0 and age > 59.5'] = 41.02;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight > 90.5 and height > 169.0 and Size > 7.05 and creatinine <= 1.095'] = 41.21;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* <= 144.0 and renal > 9.5 and age > 85.0'] = 59.55;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* > 144.0 and age <= 58.5 and age <= 37.5'] = 59.92;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* > 144.0 and age <= 58.5 and age > 37.5 and creatinine > 1.4'] = 59.55;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* > 144.0 and age > 58.5 and WIT* <= 175.5'] = 60.49;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* <= 62.5 and WIT* > 144.0 and age > 58.5 and WIT* > 175.5 and age > 68.5'] = 59.92;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* > 62.5 and EBL* <= 77.5'] = 61.06;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* > 62.5 and EBL* > 77.5 and weight <= 83.0 and Size > 2.95 and height > 152.5'] = 60.11;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* > 62.5 and EBL* > 77.5 and weight > 83.0 and age > 46.0 and creatinine <= 0.815'] = 59.55;
-		scores['creatinine <= 1.71 and BaseHb <= 14.35 and EBL* > 62.5 and EBL* > 77.5 and weight > 83.0 and age > 46.0 and creatinine > 0.815'] = 61.06;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight <= 60.5 and creatinine <= 1.045 and creatinine <= 0.99 and WIT* <= 127.5 and renal > 8.5'] = 59.55;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight <= 60.5 and creatinine <= 1.045 and creatinine <= 0.99 and WIT* > 127.5'] = 59.92;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight <= 60.5 and creatinine > 1.045'] = 61.44;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight <= 90.5 and WIT* > 89.0 and WIT* <= 100.5 and EBL <= 85.0'] = 60.3;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight <= 90.5 and WIT* > 89.0 and WIT* > 100.5 and renal > 10.5'] = 59.74;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight > 90.5 and height <= 169.0 and EBL* > 80.0 and age <= 59.5'] = 59.92;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight > 90.5 and height > 169.0 and Size <= 7.05'] = 62.95;
-		scores['creatinine <= 1.71 and BaseHb > 14.35 and weight > 60.5 and weight > 90.5 and height > 169.0 and Size > 7.05 and creatinine > 1.095'] = 59.55;
-		scores['creatinine > 1.71'] = 62.76;
-		var path_str = '';
-		for (var i = 0; i < path_conditions.length; i++)
-		{
-			 path_str += path_conditions[i] + ' and ';
+function generate_forms() {
+    generate_form(name_aki, "aki_form", parms_aki);
+}
+
+function list_to_str(items) {
+    let answer = "[";
+    for (let i = 0; i < items.length; i++) {
+        answer += "'" + items[i] + "',";
+    }
+    answer = answer.substring(0, answer.length - 1);
+    answer += "]";
+    return answer;
+}
+
+function generate_form(name, form_id, coloums) {
+    let panel = document.getElementById("panel");
+    panel.innerHTML += '<h3>' + name + ' prediction</h3><div class="card"><div class="card-body"><div id="' + form_id + '" class="row"></div></div></div><br><br>';
+    let panel_form = document.getElementById(form_id);
+    let form_html = "";
+    for (let i = 0; i < coloums.length; i++) {
+        form_html += '<div class="col-lg-4 col-md-4 col-sm-12"><div class="form-group">';
+        form_html += '<label id="label_' + name + '_' + coloums[i] + '" for="' + coloums[i] + '">' + coloums[i] + ' </label>';
+        form_html += '<input type="text" class="form-control" id="' + name + '_' + coloums[i] + '" aria-describedby="' + coloums[i] + '" placeholder="' + coloums[i] + '">';
+        form_html += '</div></div>';
+    }
+    form_html += '<br><div class="col-lg-12 col-md-12 col-sm-12"><button type="submit" class="btn btn-success btn-block" id="predict_btn_' + name + '" onclick="return run_prediction(\'' + name + '\', ' + list_to_str(coloums) +');"> Predict </button></div>';
+    form_html += '<br><br><div class="col-lg-10 col-md-10 col-sm-12"><p id="answer_' + name + '"> </p></div>';
+    panel_form.innerHTML += form_html;
+}
+
+function run_prediction(name, parameters) {
+    let values = [];
+    let is_broken = false;
+    for (let i = 0; i < parameters.length; i++) {
+        let new_val = document.getElementById(name + "_" + parameters[i]).value;
+        if (new_val == "") {
+            document.getElementById("label_" + name + "_" + parameters[i]).style.color = "red";
+            if (!is_broken) {
+                document.getElementById(name + "_" + parameters[i]).focus();
+            }
+            is_broken = true;
+        } else {
+            let float_new_val = parseFloat(new_val);
+            if (!isNaN(float_new_val)) {
+                values.push(float_new_val);
+                document.getElementById("label_" + name + "_" + parameters[i]).style.color = "black";
+            } else {
+                document.getElementById("label_" + name + "_" + parameters[i]).style.color = "red";
+                let input_place = document.getElementById(name + "_" + parameters[i]);
+                input_place.value = "";
+                input_place.focus();
+            }
+        }
+    }
+    if (!is_broken) {
+        let predict_with_conf = predict(values);
+		let pred_text = "Repeat";
+		if (predict_with_conf[0] == 0){
+			pred_text = "Do not repeat";
 		}
-		path_str = path_str.substring(0, path_str.length-5);
-		return [scores[path_str], path_str];
-	}
+        document.getElementById("answer_" + name).innerHTML = "<h3>The prediction is: <b>" + pred_text + "</b>.<br><br>Because: <br>" + predict_with_conf[1].join(' and <br>') + "</h3>";
+    }
+}
+
+function predict(values) {
+    let path = [];
+    
+    if (values[0] <= 7.21) { // CRP <= 7.21
+        path.push('CRP <= 7.21');
+        if (values[1] <= 6.25) { // Age <= 6.25
+            path.push('Age <= 6.25');
+            if (values[1] <= 5.89) { // Age <= 5.89
+                path.push('Age <= 5.89');
+                if (values[0] <= 0.03) { // CRP <= 0.03
+                    path.push('CRP <= 0.03');
+                    return [0, check_path(path)];
+                } else if (values[0] <= 0.13) { // CRP > 0.03 && CRP <= 0.13
+                    path.push('CRP <= 0.13');
+                    return [1, check_path(path)];
+                } else {
+                    return [0, check_path(path)];
+                }
+            } else { // Age > 5.89
+                path.push('Age > 5.89');
+                if (values[2] <= 0.50) { // Fever <= 0.50
+                    path.push('Fever <= 0.50');
+                    if (values[3] <= 0.50) { // Pediatrician <= 0.50
+                        path.push('Pediatrician <= 0.50');
+                        return [1, check_path(path)];
+                    } else {
+                        return [0, check_path(path)];
+                    }
+                } else {
+                    return [1, check_path(path)];
+                }
+            }
+        } else { // Age > 6.25
+            path.push('Age > 6.25');
+            if (values[0] <= 0.16) { // CRP <= 0.16
+                path.push('CRP <= 0.16');
+                if (values[2] > 0.50 && values[1] <= 15.18) {
+                    return [1, check_path(path)];
+                } else {
+                    return [0, check_path(path)];
+                }
+            } else { // CRP > 0.16
+                path.push('CRP > 0.16');
+                if (values[3] <= 0.50 && values[1] > 9.45) {
+                    return [1, check_path(path)];
+                } else {
+                    return [0, check_path(path)];
+                }
+            }
+        }
+    } else { // CRP > 7.21
+        path.push('CRP > 7.21');
+        if (values[5] <= 0.50) { // Male <= 0.50
+            path.push('Male <= 0.50');
+            if (values[6] > 0.50 && values[1] > 16.48) {
+                return [1, check_path(path)];
+            } else {
+                return [0, check_path(path)];
+            }
+        } else { // Male > 0.50
+            path.push('Male > 0.50');
+            if (values[1] > 8.05) {
+                if (values[7] > 0.50 && values[1] > 11.12) {
+                    return [0, check_path(path)];
+                } else if (values[0] > 119.95) {
+                    return [1, check_path(path)];
+                } else {
+                    return [0, check_path(path)];
+                }
+            } else if (values[1] > 7.48 && values[0] <= 17.10) {
+                return [1, check_path(path)];
+            } else {
+                return [0, check_path(path)];
+            }
+        }
+    }
+}
+
+function check_path(path){
+	return path;
+}
 
 	</script>
 
